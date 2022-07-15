@@ -1,11 +1,14 @@
-import React , { useEffect, useState }from 'react'
+import React, { useEffect, useState } from 'react'
 import DocTitleByStore from '../shared/DocTitleByStore'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
-import { Pagination, message, Spin, Modal } from 'antd'
+import { Pagination, message, Spin, Modal, Input, Select } from 'antd'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
+import useDebounce from '../hooks/useDebounce'
 
 const { confirm } = Modal
+const { Search } = Input
+const { Option } = Select
 
 const Rooms = () => {
 
@@ -13,7 +16,7 @@ const Rooms = () => {
     const [loading, setLoading] = useState(false)
     const [rooms, setRooms] = useState([])
     const [page, setPage] = useState(1)
-    const [limit, setLimit] = useState(10)
+    const [limit, setLimit] = useState(20)
     const [error, setError] = useState('')
     const [room_number, setRoom_number] = useState('')
     const [kind_of_room, setKind_of_room] = useState('')
@@ -23,11 +26,22 @@ const Rooms = () => {
 
     const index0fLast = page * limit
     const index0fFirst = index0fLast - limit
-    const currentRooms = rooms.slice(index0fFirst, index0fLast)
+    const sortRate = rate => {
+        switch (rate) {
+            case 'ASC':
+                return rooms.slice(index0fFirst, index0fLast).sort((a, b) => a.room_rates - b.room_rates)
+            case 'DESC':
+                return rooms.slice(index0fFirst, index0fLast).sort((a, b) => b.room_rates - a.room_rates)
+            default:
+                return rooms.slice(index0fFirst, index0fLast)
+        }
+    }
+    const currentRooms = sortRate(room_rates)
+    const searchDebounce = useDebounce(room_number)
 
     useEffect(() => {
         _fetchRooms()
-    }, [])
+    }, [searchDebounce, kind_of_room, bed_type])
 
     const _handlePageChange = (page, limit) => {
         setLimit(limit)
@@ -55,24 +69,20 @@ const Rooms = () => {
         setError('')
 
         const payload = {}
-        if(room_number !== "") payload.room_number = room_number
-        if(kind_of_room !== "") payload.kind_of_room = kind_of_room
-        if(bed_type !== "") payload.bed_type = bed_type
-        if(room_rates !== "") payload.room_rates = room_rates
-
+        if (room_number !== "") payload.room_number = +room_number
+        if (kind_of_room !== "") payload.kind_of_room = kind_of_room
+        if (bed_type !== "") payload.bed_type = bed_type
 
         try {
             const res = await axios({
-                method : 'post',
-                url : `${url}/api/room`,
-                headers: {}, 
-                data : payload
+                method: 'post',
+                url: `${url}/api/room`,
+                headers: {},
+                data: payload
             })
             const { data } = res
+            setRooms(data)
 
-            if (data.length) {
-                setRooms(data)
-            }
             setLoading(false)
         } catch (e) {
             setError(e.message || 'Unknown error.')
@@ -101,6 +111,30 @@ const Rooms = () => {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
 
+    const TypeRoom = type => {
+        switch (type) {
+            case 'STD' : 
+                return 'Phòng standard'
+            case 'SUP':
+                return 'Phòng superior'
+            case 'DLX':
+                return 'Phòng deluxe'
+            default :
+                return 'Phòng suite'
+        }
+    }
+
+    const TypeBed = type => {
+        switch (type) {
+            case 'single':
+                return 'Single bed'
+            case 'double':
+                return 'Double bed'
+            default:
+                return 'Queen bed'
+        }
+    }
+
     const changeStatus = status => {
         switch (status) {
             case 'active':
@@ -108,6 +142,14 @@ const Rooms = () => {
             default:
                 return <span className='bg-secondary text-white px-2 py1 rounded '>{status}</span>
         }
+    }
+
+    const handleSearchChange = e => {
+        setRoom_number(e.target.value)
+    }
+
+    const handleSelectChange = (setValue, value) => {
+        setValue(value)
     }
 
     if (error) return <i className='text-danger fs-14'>{error}</i>
@@ -121,6 +163,51 @@ const Rooms = () => {
                     <Link to="/new" className="btn btn-primary">Thêm phòng</Link>
                 </div>
             </div>
+            <div className="filterRooms px-3 row pb-3">
+                <div className="filterSearch col-md-3">
+                    <label htmlFor="searchNumber" style={{ fontWeight: 'bold' }}>Số phòng</label>
+                    <Search placeholder="Search for number of room" id="searchNumber" value={room_number} onChange={handleSearchChange} allowClear/>
+                </div>
+                <div className="selectFilter col-md-2 d-flex flex-column">
+                    <label htmlFor="searchNumber" style={{ fontWeight: 'bold' }}>Loại phòng</label>
+                    <Select
+                        style={{ width: 200 }}
+                        placeholder="--Loại phòng--"
+                        allowClear
+                        onChange={(value) => handleSelectChange(setKind_of_room, value)}
+                    >
+                        <Option value="STD">Phòng standard</Option>
+                        <Option value="SUP">Phòng superior</Option>
+                        <Option value="DLX">Phòng deluxe</Option>
+                        <Option value="SUT">Phòng suite</Option>
+                    </Select>
+                </div>
+                <div className="selectFilter col-md-2 d-flex flex-column">
+                    <label htmlFor="searchNumber" style={{ fontWeight: 'bold' }}>Loại giường</label>
+                    <Select
+                        style={{ width: 200 }}
+                        placeholder="--Loại Giường--"
+                        allowClear
+                        onChange={(value) => handleSelectChange(setBed_type, value)}
+                    >
+                        <Option value="single">Single bed</Option>
+                        <Option value="double">Double bed</Option>
+                        <Option value="queen">Queen bed</Option>
+                    </Select>
+                </div>
+                <div className="selectFilter col-md-2 d-flex flex-column">
+                    <label htmlFor="searchNumber" style={{ fontWeight: 'bold' }}>Giá phòng</label>
+                    <Select
+                        style={{ width: 200 }}
+                        placeholder="--Giá phòng--"
+                        allowClear
+                        onChange={(value) => handleSelectChange(setRoom_rates, value)}
+                    >
+                        <Option value="ASC">Giá tăng dần</Option>
+                        <Option value="DESC">Giá giảm dần</Option>
+                    </Select>
+                </div>
+            </div>
             <Spin tip="Loading..." spinning={loading}>
                 <div className="SectionInner">
                     {
@@ -128,7 +215,7 @@ const Rooms = () => {
                         <div className="MoviesTable">
                             <div className="wrapTable">
                                 <table className="table">
-                                    <thead className="ShippingsTableHead" style={{background : "#F4F6F8"}}>
+                                    <thead className="ShippingsTableHead" style={{ background: "#F4F6F8" }}>
                                         <tr>
                                             <th className="text-center">Loại phòng</th>
                                             <th className="text-center">Số phòng</th>
@@ -150,26 +237,26 @@ const Rooms = () => {
                                         {
                                             rooms.length && currentRooms.map((item, index) => {
                                                 return <tr key={index}>
-                                                    <td className="text-center">{item.kind_of_room}</td>
+                                                    <td className="text-center">{TypeRoom(item.kind_of_room)}</td>
                                                     <td className="text-center">{item.room_number}</td>
                                                     <td className="text-center">{item.floor}</td>
                                                     <td className="text-center">{item.location}</td>
                                                     <td className="text-center">{!!item.direction && item.direction}</td>
                                                     <td className="text-center">{item.area}m²</td>
-                                                    <td className="text-center">{item.bed_type}</td>
+                                                    <td className="text-center">{TypeBed(item.bed_type)}</td>
                                                     <td className="text-center">{item.maximum_people}</td>
                                                     <td className="text-center">
                                                         {!!item.imgae && <img src={item.imgae} alt="" width="30" height="30" />}
                                                     </td>
                                                     <td className="text-center">{!!item.utilities && item.utilities.map((i, index) => {
-                                                        if(index) return <span>{`${i},`}</span>
+                                                        if (index) return <span>{`${i},`}</span>
                                                     })}</td>
                                                     <td className="text-center">{numberWithCommas(item.room_rates)}</td>
                                                     <td className="text-center">{item.discount}%</td>
                                                     <td className="text-center">{changeStatus(item.status)}</td>
-                                                    <td>
+                                                    <td className="text-center">
                                                         {/* <span className="text-primary px-1" style={{ cursor: "pointer" }}>Edit</span>| */}
-                                                        <span className="text-danger" onClick={() => showDeleteConfirm(item._id, item.room_number)} style={{ cursor: "pointer" }}>Delete</span>
+                                                        <span className="text-danger " onClick={() => showDeleteConfirm(item._id, item.room_number)} style={{ cursor: "pointer" }}>Delete</span>
                                                     </td>
                                                 </tr>
                                             })

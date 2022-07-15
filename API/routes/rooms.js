@@ -28,25 +28,23 @@ router.delete("/:id", async (req, res) => {
 
 //Get all Rooms
 
-router.post("/", async (req, res)=>{
-    const {room_number, kind_of_room, bed_type, room_rates} = req.body
+router.post("/", async (req, res) => {
+    const { room_number, kind_of_room, bed_type } = req.body
     const query = {}
 
-    if(typeof room_number === "number"){
+    if (typeof room_number === "number") {
         query.room_number = room_number
     }
 
-    if(typeof kind_of_room === "string") query.kind_of_room = kind_of_room
+    if (typeof kind_of_room === "string") query.kind_of_room = kind_of_room
 
-    if(bed_type === "string") query.bed_type = bed_type
+    if (typeof bed_type === "string") query.bed_type = bed_type
 
-    if(typeof room_rates === "number"){
-        query.room_rates = room_rates
-    }
 
     try {
         const newRooms = await Rooms.find(query).lean()
-        res.status(201).json(newRooms.reverse())
+        res.status(201).json(newRooms)
+
     } catch (error) {
         res.status(500).json(error)
     }
