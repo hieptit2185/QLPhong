@@ -32,3 +32,12 @@ code {
   margin-bottom: 1rem;
   color: #212529;
 }
+
+.itemInfo > label{
+  width: 108px;
+}
+.ListInfo{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-gap: 30px;
+}

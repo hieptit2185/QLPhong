@@ -165,11 +165,11 @@ const Rooms = () => {
             </div>
             <div className="filterRooms px-3 row pb-3">
                 <div className="filterSearch col-md-3">
-                    <label htmlFor="searchNumber" style={{ fontWeight: 'bold' }}>Số phòng</label>
+                    <label htmlFor="searchNumber" style={{ fontWeight: 'bold',marginBottom: '10px'}}>Số phòng</label>
                     <Search placeholder="Search for number of room" id="searchNumber" value={room_number} onChange={handleSearchChange} allowClear/>
                 </div>
                 <div className="selectFilter col-md-2 d-flex flex-column">
-                    <label htmlFor="searchNumber" style={{ fontWeight: 'bold' }}>Loại phòng</label>
+                    <label htmlFor="searchNumber" style={{ fontWeight: 'bold',marginBottom: '10px' }}>Loại phòng</label>
                     <Select
                         style={{ width: 200 }}
                         placeholder="--Loại phòng--"
@@ -183,7 +183,7 @@ const Rooms = () => {
                     </Select>
                 </div>
                 <div className="selectFilter col-md-2 d-flex flex-column">
-                    <label htmlFor="searchNumber" style={{ fontWeight: 'bold' }}>Loại giường</label>
+                    <label htmlFor="searchNumber" style={{ fontWeight: 'bold',marginBottom: '10px' }}>Loại giường</label>
                     <Select
                         style={{ width: 200 }}
                         placeholder="--Loại Giường--"
@@ -196,7 +196,7 @@ const Rooms = () => {
                     </Select>
                 </div>
                 <div className="selectFilter col-md-2 d-flex flex-column">
-                    <label htmlFor="searchNumber" style={{ fontWeight: 'bold' }}>Giá phòng</label>
+                    <label htmlFor="searchNumber" style={{ fontWeight: 'bold',marginBottom: '10px' }}>Giá phòng</label>
                     <Select
                         style={{ width: 200 }}
                         placeholder="--Giá phòng--"
