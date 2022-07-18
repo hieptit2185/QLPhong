@@ -1,6 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import ReturnPage from '../shared/ReturnPage'
 import DocTitleByStore from '../shared/DocTitleByStore'
+import { v4 } from "uuid"
+import axios from 'axios'
+import { storage } from "../firebase"
+import { useNavigate } from "react-router-dom"
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { message, Spin, Input, Select, Button, Checkbox } from 'antd'
 
 const { Option } = Select
@@ -17,7 +22,7 @@ const CreateRoom = () => {
 	const [bed_type, setBed_type] = useState('')
 	const [direction, setDirection] = useState('')
 	const [discount, setDiscount] = useState('')
-	const [imgae, setImgae] = useState('')
+	const [image, setImgae] = useState('')
 	const [utilities, setUtilities] = useState('')
 
 	const handleSelectChange = (set, value) => {
@@ -26,11 +31,29 @@ const CreateRoom = () => {
 
 	const handleInputChange = (set, value) => {
 		set(value)
-	}	
+	}
 
 	const payload = {
-		floor, room_number, location, kind_of_room, area, maximum_people, room_rates, bed_type, direction, discount, imgae, utilities
+		floor, room_number, location, kind_of_room, area, maximum_people, room_rates, bed_type, direction, discount, image, utilities
 	}
+
+	const upload = (field, set) => {
+
+		const imgRef = ref(storage, `images/${field.name + v4()}`)
+		uploadBytes(imgRef, field).then((res) => {
+			getDownloadURL(res.ref).then(url => {
+				set(url)
+			})
+		})
+	}
+
+	const handleCheckboxChange = event => {
+		let newArray = [...utilities, event.target.value]
+		if (utilities.includes(event.target.value)) {
+		  newArray = newArray.filter(i => i !== event.target.value)
+		} 
+		setUtilities(newArray)
+	  }
 	console.log('payload', payload)
 	return (
 		<div className='CreateRoom'>
@@ -186,24 +209,34 @@ const CreateRoom = () => {
 								style={{ width: 200, marginLeft: "20px" }}
 							/>
 						</div>
-						<div className="itemInfo">
+						<div className="itemInfo d-flex align-items-center">
 							<label>Hình ảnh</label>
-							<input type="file" name="" id="uploadFile" style={{ display: 'none' }} />
-							<label htmlFor="uploadFile"
-								style={{ marginLeft: "20px", background: "#1890ff", borderRadius: "4px", color: "#ffffff", cursor: "pointer" }}
-								className="text-center py-2"
-							>
-								{/* <Button type="primary" >Upload image</Button> */}
-								Upload image
-							</label>
+							<input
+								type="file"
+								name=""
+								id="uploadFile"
+								style={{ display: 'none' }}
+								onChange={e => upload(e.target.files[0], setImgae)}
+							/>
+							<div className="d-flex">
+								<label htmlFor="uploadFile"
+									style={{ marginLeft: "20px", background: "#1890ff", borderRadius: "4px", color: "#ffffff", cursor: "pointer", marginRight:"40px" }}
+									className="text-center py-2 px-3"
+								>
+									Upload image
+								</label>
+								{!!image && <img src={image} alt="" width="40" />}
+							</div>
 						</div>
 						<div className="itemInfo d-flex">
 							<label>Tiện ích</label>
 							<div className="listCheck" style={{ marginLeft: "20px" }}>
-								<Checkbox>Wifi</Checkbox>
-								<Checkbox>Điện thoại</Checkbox>
-								<Checkbox>Bếp</Checkbox>
-								<Checkbox>Nước</Checkbox>
+								<Checkbox id="wifi" value="wifi" onChange={handleCheckboxChange}>Wifi</Checkbox>
+								<Checkbox id="phone" value="điện thoại" onChange={handleCheckboxChange}>Điện thoại</Checkbox>
+								<Checkbox id="fridge" value="tủ lạnh" onChange={handleCheckboxChange}>Tủ lạnh</Checkbox>
+								<Checkbox id="water" value="nước uống" onChange={handleCheckboxChange}>Nước</Checkbox>
+								<Checkbox id="kitchen" value="bếp" onChange={handleCheckboxChange}>Bếp</Checkbox>
+
 							</div>
 						</div>
 					</div>
